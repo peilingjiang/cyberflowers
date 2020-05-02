@@ -9,16 +9,17 @@ let logMsg = {
     d: "=== d data ===============",
     0: "--- 0 language learned ---",
     1: "--- 1 sketch preload -----",
-    2: "--- 2 sketch setup -------"
+    2: "--- 2 sketch setup -------",
+    3: "--- 3 sentiment ready ----"
 };
 
-let pageLang;
-let langReceived = false;
+/* External libraries: jQuery, p5, ml5 */
 
+let pageLang;
 chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
     console.log(logMsg[0]);
     pageLang = msg.data;
-    langReceived = true;
+    windowFlowerSketch.setFont();
 });
 
 // en
@@ -27,22 +28,35 @@ let ALPHABET = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz".split("");
 let sketch = (s) => {
     // Parse data from data.json
     let data;
-    var getFile = new XMLHttpRequest();
-    getFile.onreadystatechange = function () {
-        if (this.readyState == 4 && this.status == 200) {
-            data = JSON.parse(this.responseText);
+    fetch(chrome.extension.getURL('scripts/data.json'))
+        .then((response) => response.json())
+        .then((json) => {
+            data = json;
             console.log(logMsg.d);
-        }
-    };
-    getFile.open("GET", "data.json", true);
-    getFile.send();
+        });
 
     let c; // Canvas
-    let frameRate = 90;
+    let frameRate = 60;
     let scale = 1; // Scale of drawings on canvas
 
     let flowers = []; // Array of all flowers
     let flowersNum = 0;
+
+    let sentimentReady = false;
+    const sentiment = ml5.sentiment('movieReviews', () => {
+        sentimentReady = true;
+        console.log(logMsg[3]);
+    });
+
+    s.setFont = () => {
+        switch (pageLang) {
+            case "en":
+                s.textFont("Times New Roman");
+                s.textFont("Times");
+                s.textStyle(s.NORMAL);
+                break;
+        }
+    }
 
     s.setup = () => {
         c = s.createCanvas(
@@ -52,12 +66,7 @@ let sketch = (s) => {
         c.position(0, 0);
         s.frameRate(frameRate);
         s.angleMode(s.DEGREES);
-        switch (pageLang) {
-            case "en":
-                s.textFont("Times");
-                s.textStyle(s.NORMAL);
-                break;
-        }
+
         console.log(logMsg[2]);
     }
 
@@ -68,13 +77,29 @@ let sketch = (s) => {
         }
     };
 
-    s.mouseClicked = () => {
-        let tempChar = s.random(ALPHABET);
-        if ((pageLang in data) && (tempChar in data[lang])) {
-            flowers.push(new Flower(s.mouseX, s.mouseY, pageLang, tempChar, s.random(0, 1)));
-            flowersNum++;
+    /* From tune file */
+    // s.mouseClicked = () => {
+    //     let tempChar = s.random(ALPHABET);
+    //     if ((pageLang in data) && (tempChar in data[pageLang])) {
+    //         flowers.push(new Flower(s.mouseX, s.mouseY, pageLang, tempChar, s.random(0, 1)));
+    //         flowersNum++;
+    //     }
+    // };
+
+    $("p, textarea, span, h1, h2, h3, h4, h5, h6, q, cite, blockquote, a, em, i, b, strong").click(() => {
+        if (sentimentReady && (pageLang in data)) {
+            let selection = window.getSelection();
+            let charIndex = selection.focusOffset;
+            let text = selection.focusNode.wholeText;
+            if (text.charAt((charIndex >> 1) << 1) in data[pageLang]) {
+                let sentimentScore = sentiment.predict(text.slice(s.constrain(charIndex - 30, 0, charIndex), s.constrain(charIndex + 30, charIndex, text.length))).score; // Truncate the text to 60 chars at most
+
+                flowers.push(new Flower(s.mouseX, s.mouseY, pageLang, text.charAt((charIndex >> 1) << 1), sentimentScore));
+                flowersNum++;
+            }
         }
-    };
+        return false;
+    });
 
     class Flower {
         constructor(x, y, lang, char, sentiment) {
@@ -97,7 +122,8 @@ let sketch = (s) => {
             this.offset = data[lang][char][0]; // Offset of char in flower
             this.angle = data[lang][char][1]; // How many times rotated!
             this.height = data[lang][char][2]; // Height in standard size
-            this.radiusScale = scale * s.map(s.abs(sentiment - 0.5), 0, 0.5, 9, 18); // Size of flower
+            /* Different sentiment mapped range from tune file */
+            this.radiusScale = scale * s.map(s.abs(sentiment - 0.5), 0, 0.5, 5, 12); // Size of flower
 
             this.baseColor = s.random(data.color[s.floor(sentiment * 10)]);
             this.baseColorSet;
@@ -165,4 +191,4 @@ let sketch = (s) => {
     }
 };
 
-let windowFlowerSketch = new p5(s);
+let windowFlowerSketch = new p5(sketch);

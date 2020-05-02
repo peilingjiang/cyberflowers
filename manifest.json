@@ -2,7 +2,11 @@
     "name": "Cyberflowers",
     "version": "0.1",
     "description": "People write, people seed.",
-    "permissions": ["activeTab", "declarativeContent", "storage", "tabs"],
+    "permissions": [
+        "activeTab",
+        "declarativeContent",
+        "tabs"
+    ],
     "background": {
         "scripts": ["scripts/background.js"],
         "persistent": false
@@ -17,9 +21,13 @@
         "default_title": "Cyberflowers"
     },
     "content_scripts": [{
-        "css": ["style.css"],
-        "matches": ["<all_urls>"]
+        "matches": ["<all_urls>"],
+        "all_frames": true,
+        "css": ["style.css"]
     }],
+    "web_accessible_resources": [
+        "scripts/data.json"
+    ],
     "icons": {
         "16": "images/bloom16.png",
         "32": "images/bloom32.png",
