@@ -15,25 +15,23 @@ let logMsg = {
 
 /* External libraries: jQuery, p5, ml5 */
 
-let pageLang;
-chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
-    console.log(logMsg[0]);
-    pageLang = msg.data;
-    windowFlowerSketch.setFont();
-});
-
 // en
 let ALPHABET = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz".split("");
 
 let sketch = (s) => {
     // Parse data from data.json
     let data;
+    let dataReady = false;
     fetch(chrome.extension.getURL('scripts/data.json'))
         .then((response) => response.json())
         .then((json) => {
             data = json;
+            dataReady = true;
             console.log(logMsg.d);
         });
+
+    // let colorChoices = s.random(findChoices([0, 1, 2])); /* Two colors */
+    let colorChoices = [s.random([0, 1, 2])]; /* One color */
 
     let c; // Canvas
     let frameRate = 60;
@@ -51,12 +49,11 @@ let sketch = (s) => {
     s.setFont = () => {
         switch (pageLang) {
             case "en":
-                s.textFont("Times New Roman");
                 s.textFont("Times");
                 s.textStyle(s.NORMAL);
                 break;
         }
-    }
+    };
 
     s.setup = () => {
         c = s.createCanvas(
@@ -68,7 +65,7 @@ let sketch = (s) => {
         s.angleMode(s.DEGREES);
 
         console.log(logMsg[2]);
-    }
+    };
 
     s.draw = () => {
         s.clear();
@@ -77,29 +74,34 @@ let sketch = (s) => {
         }
     };
 
-    /* From tune file */
-    // s.mouseClicked = () => {
-    //     let tempChar = s.random(ALPHABET);
-    //     if ((pageLang in data) && (tempChar in data[pageLang])) {
-    //         flowers.push(new Flower(s.mouseX, s.mouseY, pageLang, tempChar, s.random(0, 1)));
-    //         flowersNum++;
-    //     }
-    // };
+    s.windowResized = () => {
+        s.resizeCanvas(
+            document.documentElement.scrollWidth,
+            document.documentElement.scrollHeight
+        );
+    };
 
     $("p, textarea, span, h1, h2, h3, h4, h5, h6, q, cite, blockquote, a, em, i, b, strong").click(() => {
-        if (sentimentReady && (pageLang in data)) {
+        sowFlower(s.mouseX, s.mouseY);
+        return false;
+    });
+
+    let sowFlower = (x, y) => {
+        /* Must be clicked by a real cursor */
+        if ((pageLang in data) && dataReady && sentimentReady) {
             let selection = window.getSelection();
             let charIndex = selection.focusOffset;
             let text = selection.focusNode.wholeText;
+
             if (text.charAt((charIndex >> 1) << 1) in data[pageLang]) {
                 let sentimentScore = sentiment.predict(text.slice(s.constrain(charIndex - 30, 0, charIndex), s.constrain(charIndex + 30, charIndex, text.length))).score; // Truncate the text to 60 chars at most
 
-                flowers.push(new Flower(s.mouseX, s.mouseY, pageLang, text.charAt((charIndex >> 1) << 1), sentimentScore));
+                // Sow seed for new flower
+                flowers.push(new Flower(x, y, pageLang, text.charAt((charIndex >> 1) << 1), sentimentScore));
                 flowersNum++;
             }
         }
-        return false;
-    });
+    };
 
     class Flower {
         constructor(x, y, lang, char, sentiment) {
@@ -113,6 +115,7 @@ let sketch = (s) => {
             this.y = y;
             this.lang = lang;
             this.char = char;
+            this.sentiment = sentiment;
 
             this.t = 0; // For bloom animation
             this.bloomTime = s.int(0.3 * frameRate * s.map(sentiment, 0, 1, 1.2, 0.8) + s.random(-frameRate / 6, frameRate / 6)); // Total bloom time base 1 sec
@@ -122,21 +125,27 @@ let sketch = (s) => {
             this.offset = data[lang][char][0]; // Offset of char in flower
             this.angle = data[lang][char][1]; // How many times rotated!
             this.height = data[lang][char][2]; // Height in standard size
-            /* Different sentiment mapped range from tune file */
-            this.radiusScale = scale * s.map(s.abs(sentiment - 0.5), 0, 0.5, 5, 12); // Size of flower
 
-            this.baseColor = s.random(data.color[s.floor(sentiment * 10)]);
+            /* Different sentiment mapped range from tune file */
+            this.radiusScale = scale * s.map(s.abs(sentiment - 0.5), 0, 0.5, 5, 9); // Size of flower
+
             this.baseColorSet;
             this.buildBaseColorSet();
         }
 
         buildBaseColorSet() {
+            let thisChoice = s.random(colorChoices);
+            let baseColor = [
+                s.map(this.sentiment, 0, 1, data.color.negative[thisChoice][0], data.color.positive[thisChoice][0]),
+                s.map(this.sentiment, 0, 1, data.color.negative[thisChoice][1], data.color.positive[thisChoice][1]),
+                s.map(this.sentiment, 0, 1, data.color.negative[thisChoice][2], data.color.positive[thisChoice][2])
+            ];
             this.baseColorSet = [];
             for (let i = 0; i < this.angle; i++)
                 this.baseColorSet.push([
-                    s.constrain(this.baseColor[0] + s.random(-17, 17), 0, 255),
-                    s.constrain(this.baseColor[1] + s.random(-17, 17), 0, 255),
-                    s.constrain(this.baseColor[2] + s.random(-17, 17), 0, 255)
+                    s.constrain(baseColor[0] + s.random(-17, 17), 0, 255),
+                    s.constrain(baseColor[1] + s.random(-17, 17), 0, 255),
+                    s.constrain(baseColor[2] + s.random(-17, 17), 0, 255)
                 ]);
         }
 
@@ -191,4 +200,22 @@ let sketch = (s) => {
     }
 };
 
+let findChoices = (a) => {
+    let returner = [];
+    for (let i = 0; i < a.length - 1; i++) {
+        let temp = a.slice(i, i + 1);
+        for (let j = i + 1; j < a.length; j++) {
+            returner.push(temp.concat(a.slice(j, j + 1)));
+        }
+    }
+    return returner;
+};
+
 let windowFlowerSketch = new p5(sketch);
+
+let pageLang;
+chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
+    console.log(logMsg[0]);
+    pageLang = msg.data;
+    windowFlowerSketch.setFont();
+});

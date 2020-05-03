@@ -2,6 +2,7 @@ let logMsg = {
     0: "--- 0 background running ---",
     "jquery": "--- j jquery-3.5.0 load ----",
     "p5": "--- p p5.js load -----------",
+    "ml5": "--- m ml5.js load ----------",
     "bloom": "--- b bloom.js load --------",
     "lang": "--- l language send --------"
 }
@@ -43,27 +44,29 @@ chrome.browserAction.onClicked.addListener((tab) => {
         });
         console.log(logMsg.jquery);
 
-        chrome.tabs.insertCSS(tab.id, {
-            code: "a { pointer-events: none; !important }"
-        });
+        // chrome.tabs.insertCSS(tab.id, {
+        //     code: "a { pointer-events: none; !important }"
+        // });
         chrome.tabs.executeScript(tab.id, {
             file: "scripts/p5.min.js"
-        }, (results) => {
+        }, (r) => {
             console.log(logMsg.p5);
             chrome.tabs.executeScript(tab.id, {
                 file: "scripts/ml5.min.js"
-            });
-            chrome.tabs.executeScript(tab.id, {
-                file: "scripts/bloom.js"
-            }, (results) => {
-                console.log(logMsg.bloom);
-                chrome.tabs.detectLanguage(tab.id, (lang) => {
-                    chrome.tabs.sendMessage(tab.id, {
-                        task: "language",
-                        id: tab.id,
-                        data: lang
+            }, (r) => {
+                console.log(logMsg.ml5);
+                chrome.tabs.executeScript(tab.id, {
+                    file: "scripts/bloom.js"
+                }, (r) => {
+                    console.log(logMsg.bloom);
+                    chrome.tabs.detectLanguage(tab.id, (lang) => {
+                        chrome.tabs.sendMessage(tab.id, {
+                            task: "language",
+                            id: tab.id,
+                            data: lang
+                        });
+                        console.log(logMsg.lang);
                     });
-                    console.log(logMsg.lang);
                 });
             });
         });
