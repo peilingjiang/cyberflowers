@@ -18,7 +18,7 @@ let logMsg = {
 /* External libraries: jQuery, p5, ml5 */
 
 // en
-let ALPHABET = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz".split("");
+// let ALPHABET = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz".split("");
 
 let pageLang; // Language of the page
 
