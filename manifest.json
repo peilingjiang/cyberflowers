@@ -1,6 +1,6 @@
 {
     "name": "Cyberflowers",
-    "version": "0.3",
+    "version": "0.3.1",
     "description": "People write, people seed.",
     "permissions": [
         "activeTab",

@@ -14,10 +14,12 @@ let toggle = {}; // tabID: true/false
 /* New tab created */
 chrome.tabs.onCreated.addListener((tab) => {
     toggle[tab.id] = false;
+    return false;
 });
 /* Old tab removed */
 chrome.tabs.onRemoved.addListener((tab) => {
     delete toggle[tab.id];
+    return false;
 });
 
 /* --- Switch tabs --- */
@@ -27,6 +29,14 @@ chrome.tabs.onActivated.addListener((activeInfo) => {
         toggle[activeInfo.tabId] = false;
 
     TabSetIcon(activeInfo.tabId);
+    return false;
+});
+
+/* --- Update tabs --- */
+chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
+    toggle[tabId] = false;
+    TabSetIcon(tabId);
+    return false;
 });
 
 chrome.browserAction.onClicked.addListener((tab) => {
@@ -76,6 +86,7 @@ chrome.browserAction.onClicked.addListener((tab) => {
         // TODO: a more elegant way to remove canvas and restore page
         chrome.tabs.reload(tab.id);
     }
+    return false;
 });
 
 let TabSetIcon = (id) => {

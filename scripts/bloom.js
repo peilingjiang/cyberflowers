@@ -20,11 +20,13 @@ let logMsg = {
 // en
 let ALPHABET = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz".split("");
 
+let pageLang; // Language of the page
+
 let sketch = (s) => {
     // Parse data from data.json
     let data;
     let dataReady = false;
-    fetch(chrome.extension.getURL('scripts/data.json'))
+    fetch(chrome.extension.getURL("scripts/data.json"))
         .then((response) => response.json())
         .then((json) => {
             data = json;
@@ -49,8 +51,11 @@ let sketch = (s) => {
     let rectList;
     let selectionInfo = {}; // Char index info of rects
 
+    let saveButton;
+    let saveCount = 0;
+
     let sentimentReady = false;
-    const sentiment = ml5.sentiment('movieReviews', () => {
+    const sentiment = ml5.sentiment("movieReviews", () => {
         sentimentReady = true;
         console.log(logMsg[3]);
     });
@@ -77,6 +82,12 @@ let sketch = (s) => {
         s.angleMode(s.DEGREES);
 
         console.log(logMsg[2]);
+
+        /* create saveButton */
+        // TODO: Also save the original page as background (maybe)
+        saveButton = s.createButton("Pick Cyberflowers");
+        saveButton.id("saveButtonCyberFlowers");
+        saveButton.mousePressed(saveIt);
     };
 
     s.draw = () => {
@@ -315,6 +326,11 @@ let sketch = (s) => {
             (window.getSelection().focusOffset != window.getSelection().anchorOffset)
         );
     };
+
+    let saveIt = () => {
+        s.saveCanvas(c, document.title + '_' + saveCount.toString(), "png");
+        saveCount++;
+    };
 };
 
 let findChoices = (a) => {
@@ -330,7 +346,6 @@ let findChoices = (a) => {
 
 let windowFlowerSketch = new p5(sketch);
 
-let pageLang;
 chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
     console.log(logMsg[0]);
     pageLang = msg.data;

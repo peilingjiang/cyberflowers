@@ -1,8 +1,40 @@
-a {
+/* a {
     pointer-events: none !important
-}
+} */
 
 ::selection {
     background: none !important;
     color: #dddddd !important;
+}
+
+#saveButtonCyberFlowers {
+    position: fixed;
+    right: 17px;
+    top: 17px;
+    margin: 0;
+    padding: 0.6rem;
+    overflow: hidden;
+    background: #000000;
+    opacity: 0.85;
+    color: #ffffff;
+    border: none;
+    box-shadow: none;
+    outline: none;
+    border-radius: 5px;
+    border-color: transparent;
+    font-size: 0.9rem;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+    font-weight: 300;
+    z-index: 999999;
+    cursor: grab;
+}
+
+#saveButtonCyberFlowers:hover {
+    background: #333333;
+    cursor: grab;
+}
+
+#saveButtonCyberFlowers:active {
+    background: #000000;
+    cursor: grabbing;
 }
