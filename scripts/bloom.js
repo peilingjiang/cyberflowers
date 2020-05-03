@@ -10,7 +10,9 @@ let logMsg = {
     0: "--- 0 language learned ---",
     1: "--- 1 sketch preload -----",
     2: "--- 2 sketch setup -------",
-    3: "--- 3 sentiment ready ----"
+    3: "--- 3 sentiment ready ----",
+    c: "___ c CLICKED ____________",
+    h: "___ h HOVERED ____________"
 };
 
 /* External libraries: jQuery, p5, ml5 */
@@ -40,6 +42,13 @@ let sketch = (s) => {
     let flowers = []; // Array of all flowers
     let flowersNum = 0;
 
+    let saoMode = false; /* 扫模式 */
+    let lastMouseX = 0;
+    let lastMouseY = 0;
+    let mouseDistBuffer = 80;
+    let rectList;
+    let selectionInfo = {}; // Char index info of rects
+
     let sentimentReady = false;
     const sentiment = ml5.sentiment('movieReviews', () => {
         sentimentReady = true;
@@ -54,6 +63,9 @@ let sketch = (s) => {
                 break;
         }
     };
+
+    // let clicked = false;
+    let dragged = false;
 
     s.setup = () => {
         c = s.createCanvas(
@@ -81,12 +93,103 @@ let sketch = (s) => {
         );
     };
 
+    s.mouseWheel = () => {
+        if (saoMode) {
+            // Rebuild rectList
+            rectList = window.getSelection().getRangeAt(0).getClientRects();
+        }
+    };
+
+    s.mouseClicked = () => {
+        if (!dragged && saoMode) {
+            setTimeout(() => {
+                saoMode = false;
+                selectionInfo = {};
+            }, 100);
+        }
+    };
+
+    s.mouseDragged = () => {
+        dragged = true;
+    };
+
+    s.mouseReleased = () => {
+        setTimeout(() => {
+            // clicked = false;
+            dragged = false;
+        }, 300);
+        if (dragged && validSelection()) {
+            /* saoMode assumes all chars have equal length */
+            saoMode = true;
+            // console.log(window.getSelection());
+            // console.log(window.getSelection().getRangeAt(0).getClientRects());
+            let selection = window.getSelection(); // Local
+            // Get rectList of selection rects
+            rectList = window.getSelection().getRangeAt(0).getClientRects();
+            let totalWidth = 0;
+            for (let i = 0; i < rectList.length; i++)
+                totalWidth += rectList[i].width;
+
+            let tempStart = 0;
+            let startOffset = s.min(selection.focusOffset, selection.anchorOffset);
+            let endOffset = s.max(selection.focusOffset, selection.anchorOffset);
+            for (let i = 0; i < rectList.length; i++) {
+                // Build info list of starting and end offsets of each block
+                selectionInfo[i] = [
+                    s.floor(s.map(tempStart, 0, totalWidth, startOffset, endOffset)), /* Start offset */
+                    s.floor(s.map(tempStart + rectList[i].width, 0, totalWidth, startOffset, endOffset)) /* End offset */
+                ];
+                tempStart += rectList[i].width;
+            }
+        }
+    };
+
+    let pageX = 0;
+    let pageY = 0;
+
+    s.mouseMoved = () => {
+        pageX = s.mouseX - $(window).scrollLeft();
+        pageY = s.mouseY - $(window).scrollTop();
+        if (saoMode && (s.dist(pageX, pageY, lastMouseX, lastMouseY) > mouseDistBuffer) && rectList.length) {
+            sowFlowerHover();
+        }
+    };
+
+    let sowFlowerHover = () => {
+        if ((pageLang in data) && dataReady && sentimentReady) {
+            for (let i = 0; i < rectList.length; i++) {
+                if (
+                    pageX >= rectList[i].left && pageX <= rectList[i].right &&
+                    pageY >= rectList[i].top && pageY < rectList[i].bottom
+                ) {
+                    let hoverInd = s.map(
+                        pageX - rectList[i].left,
+                        0, rectList[i].width,
+                        selectionInfo[i][0], selectionInfo[i][1]
+                    );
+                    let text = window.getSelection().focusNode.wholeText;
+
+                    if (text.charAt((hoverInd >> 1) << 1) in data[pageLang]) {
+                        console.log(logMsg.h);
+                        flowers.push(new Flower(s.mouseX, s.mouseY, pageLang, text.charAt((hoverInd >> 1) << 1), getSentimentScore(text, hoverInd)));
+                        flowersNum++;
+                        lastMouseX = pageX;
+                        lastMouseY = pageY;
+                    }
+                    break;
+                }
+            }
+        }
+    };
+
     $("p, textarea, span, h1, h2, h3, h4, h5, h6, q, cite, blockquote, a, em, i, b, strong").click(() => {
-        sowFlower(s.mouseX, s.mouseY);
+        // clicked = true;
+        if (!dragged && !saoMode)
+            sowFlowerClicked(s.mouseX, s.mouseY);
         return false;
     });
 
-    let sowFlower = (x, y) => {
+    let sowFlowerClicked = (x, y) => {
         /* Must be clicked by a real cursor */
         if ((pageLang in data) && dataReady && sentimentReady) {
             let selection = window.getSelection();
@@ -94,13 +197,18 @@ let sketch = (s) => {
             let text = selection.focusNode.wholeText;
 
             if (text.charAt((charIndex >> 1) << 1) in data[pageLang]) {
-                let sentimentScore = sentiment.predict(text.slice(s.constrain(charIndex - 30, 0, charIndex), s.constrain(charIndex + 30, charIndex, text.length))).score; // Truncate the text to 60 chars at most
-
+                let sentimentScore = getSentimentScore(text, charIndex);
                 // Sow seed for new flower
+                console.log(logMsg.c);
                 flowers.push(new Flower(x, y, pageLang, text.charAt((charIndex >> 1) << 1), sentimentScore));
                 flowersNum++;
             }
         }
+    };
+
+    let getSentimentScore = (t, ind) => {
+        /* Truncate the text to 70 chars at most */
+        return sentiment.predict(t.slice(s.constrain(ind - 35, 0, ind), s.constrain(ind + 35, ind, t.length))).score;
     };
 
     class Flower {
@@ -198,6 +306,15 @@ let sketch = (s) => {
             s.pop();
         }
     }
+
+    let validSelection = () => {
+        // Check if it is a valid selection
+        return (
+            window.getSelection().anchorNode &&
+            window.getSelection().focusNode &&
+            (window.getSelection().focusOffset != window.getSelection().anchorOffset)
+        );
+    };
 };
 
 let findChoices = (a) => {

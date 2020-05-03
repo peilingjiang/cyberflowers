@@ -44,9 +44,9 @@ chrome.browserAction.onClicked.addListener((tab) => {
         });
         console.log(logMsg.jquery);
 
-        // chrome.tabs.insertCSS(tab.id, {
-        //     code: "a { pointer-events: none; !important }"
-        // });
+        chrome.tabs.insertCSS(tab.id, {
+            file: "insert_style.css"
+        });
         chrome.tabs.executeScript(tab.id, {
             file: "scripts/p5.min.js"
         }, (r) => {

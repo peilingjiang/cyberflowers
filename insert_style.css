@@ -1,0 +1,8 @@
+a {
+    pointer-events: none !important
+}
+
+::selection {
+    background: none !important;
+    color: #dddddd !important;
+}
