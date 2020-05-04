@@ -118,6 +118,7 @@ let sketch = (s) => {
                 selectionInfo = {};
             }, 100);
         }
+        return false;
     };
 
     s.mouseDragged = () => {
@@ -159,10 +160,12 @@ let sketch = (s) => {
     let pageY = 0;
 
     s.mouseMoved = () => {
-        pageX = s.mouseX - $(window).scrollLeft();
-        pageY = s.mouseY - $(window).scrollTop();
-        if (saoMode && (s.dist(pageX, pageY, lastMouseX, lastMouseY) > mouseDistBuffer) && rectList.length) {
-            sowFlowerHover();
+        if (saoMode) {
+            pageX = s.mouseX - $(window).scrollLeft();
+            pageY = s.mouseY - $(window).scrollTop();
+            if ((s.dist(pageX, pageY, lastMouseX, lastMouseY) > mouseDistBuffer) && rectList.length) {
+                sowFlowerHover();
+            }
         }
     };
 
@@ -171,15 +174,19 @@ let sketch = (s) => {
             for (let i = 0; i < rectList.length; i++) {
                 if (
                     pageX >= rectList[i].left && pageX <= rectList[i].right &&
-                    pageY >= rectList[i].top && pageY < rectList[i].bottom
+                    pageY >= rectList[i].top && pageY <= rectList[i].bottom
                 ) {
                     let hoverInd = s.map(
                         pageX - rectList[i].left,
                         0, rectList[i].width,
                         selectionInfo[i][0], selectionInfo[i][1]
                     );
-                    let text = window.getSelection().focusNode.wholeText;
-
+                    let text;
+                    if (window.getSelection().focusNode != null) {
+                        text = window.getSelection().focusNode.wholeText;
+                    } else {
+                        return false;
+                    }
                     if (text.charAt((hoverInd >> 1) << 1) in data[pageLang]) {
                         console.log(logMsg.h);
                         flowers.push(new Flower(s.mouseX, s.mouseY, pageLang, text.charAt((hoverInd >> 1) << 1), getSentimentScore(text, hoverInd)));
@@ -321,8 +328,8 @@ let sketch = (s) => {
     let validSelection = () => {
         // Check if it is a valid selection
         return (
-            window.getSelection().anchorNode &&
-            window.getSelection().focusNode &&
+            (window.getSelection().anchorNode != null) &&
+            (window.getSelection().focusNode != null) &&
             (window.getSelection().focusOffset != window.getSelection().anchorOffset)
         );
     };

@@ -8,33 +8,33 @@
 }
 
 #saveButtonCyberFlowers {
-    position: fixed;
-    right: 17px;
-    top: 17px;
-    margin: 0;
-    padding: 0.6rem;
-    overflow: hidden;
-    background: #000000;
-    opacity: 0.85;
-    color: #ffffff;
-    border: none;
-    box-shadow: none;
-    outline: none;
-    border-radius: 5px;
-    border-color: transparent;
-    font-size: 0.9rem;
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
-    font-weight: 300;
-    z-index: 999999;
-    cursor: grab;
+    position: fixed !important;
+    right: 17px !important;
+    top: 17px !important;
+    margin: 0 !important;
+    padding: 10px !important;
+    overflow: hidden !important;
+    background: #000000 !important;
+    opacity: 0.85 !important;
+    color: #ffffff !important;
+    border: none !important;
+    box-shadow: none !important;
+    outline: none !important;
+    border-radius: 4px !important;
+    border-color: transparent !important;
+    font-size: 12px !important;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif !important;
+    font-weight: 300 !important;
+    z-index: 999999 !important;
+    cursor: grab !important;
 }
 
 #saveButtonCyberFlowers:hover {
-    background: #333333;
-    cursor: grab;
+    background: #333333 !important;
+    cursor: grab !important;
 }
 
 #saveButtonCyberFlowers:active {
-    background: #000000;
-    cursor: grabbing;
+    background: #000000 !important;
+    cursor: grabbing !important;
 }

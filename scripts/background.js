@@ -18,7 +18,8 @@ chrome.tabs.onCreated.addListener((tab) => {
 });
 /* Old tab removed */
 chrome.tabs.onRemoved.addListener((tab) => {
-    delete toggle[tab.id];
+    if (tab.id in toggle)
+        delete toggle[tab.id];
     return false;
 });
 
