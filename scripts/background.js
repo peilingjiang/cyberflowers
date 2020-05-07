@@ -46,6 +46,7 @@ chrome.browserAction.onClicked.addListener((tab) => {
         toggle[tab.id] = false;
 
     toggle[tab.id] = !toggle[tab.id];
+
     if (toggle[tab.id]) {
         // ON
         TabSetIcon(tab.id);
@@ -91,6 +92,7 @@ chrome.browserAction.onClicked.addListener((tab) => {
 });
 
 let TabSetIcon = (id) => {
+    // TODO: better ways to toggle icons
     if (toggle[id]) {
         // ON
         chrome.browserAction.setIcon({

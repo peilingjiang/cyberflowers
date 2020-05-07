@@ -38,7 +38,7 @@ let sketch = (s) => {
     let colorChoices = [s.random([0, 1, 2])]; /* One color */
 
     let c; // Canvas
-    let frameRate = 60;
+    let frameRate = 30;
     let scale = 1; // Scale of drawings on canvas
 
     let flowers = []; // Array of all flowers
@@ -181,18 +181,15 @@ let sketch = (s) => {
                         0, rectList[i].width,
                         selectionInfo[i][0], selectionInfo[i][1]
                     );
-                    let text;
-                    if (window.getSelection().focusNode != null) {
-                        text = window.getSelection().focusNode.wholeText;
-                    } else {
-                        return false;
-                    }
-                    if (text.charAt((hoverInd >> 1) << 1) in data[pageLang]) {
+                    let text = window.getSelection().focusNode.wholeText;
+                    if (text != undefined && text.charAt((hoverInd >> 1) << 1) in data[pageLang]) {
                         console.log(logMsg.h);
                         flowers.push(new Flower(s.mouseX, s.mouseY, pageLang, text.charAt((hoverInd >> 1) << 1), getSentimentScore(text, hoverInd)));
                         flowersNum++;
                         lastMouseX = pageX;
                         lastMouseY = pageY;
+                    } else {
+                        return false;
                     }
                     break;
                 }
