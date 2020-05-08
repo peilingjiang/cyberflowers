@@ -5,7 +5,7 @@
     Pixel by Pixel Daniel Rozin
 */
 
-let logMsg = {
+let bloomLogMsg = {
     d: "=== d data ===============",
     0: "--- 0 language learned ---",
     1: "--- 1 sketch preload -----",
@@ -31,7 +31,7 @@ let sketch = (s) => {
         .then((json) => {
             data = json;
             dataReady = true;
-            console.log(logMsg.d);
+            console.log(bloomLogMsg.d);
         });
 
     // let colorChoices = s.random(findChoices([0, 1, 2])); /* Two colors */
@@ -57,7 +57,7 @@ let sketch = (s) => {
     let sentimentReady = false;
     const sentiment = ml5.sentiment("movieReviews", () => {
         sentimentReady = true;
-        console.log(logMsg[3]);
+        console.log(bloomLogMsg[3]);
     });
 
     s.setFont = () => {
@@ -82,7 +82,7 @@ let sketch = (s) => {
         s.frameRate(frameRate);
         s.angleMode(s.DEGREES);
 
-        console.log(logMsg[2]);
+        console.log(bloomLogMsg[2]);
 
         /* create saveButton */
         // TODO: Also save the original page as background (maybe)
@@ -186,7 +186,7 @@ let sketch = (s) => {
                     );
                     let text = window.getSelection().focusNode.wholeText;
                     if (text != undefined && text.charAt((hoverInd >> 1) << 1) in data[pageLang]) {
-                        console.log(logMsg.h);
+                        console.log(bloomLogMsg.h);
                         flowers.push(new Flower(s.mouseX, s.mouseY, pageLang, text.charAt((hoverInd >> 1) << 1), getSentimentScore(text, hoverInd)));
                         flowersNum++;
                         lastMouseX = pageX;
@@ -218,7 +218,7 @@ let sketch = (s) => {
             if (text.charAt((charIndex >> 1) << 1) in data[pageLang]) {
                 let sentimentScore = getSentimentScore(text, charIndex);
                 // Sow seed for new flower
-                console.log(logMsg.c);
+                console.log(bloomLogMsg.c);
                 flowers.push(new Flower(x, y, pageLang, text.charAt((charIndex >> 1) << 1), sentimentScore));
                 flowersNum++;
             }
@@ -358,7 +358,7 @@ let windowFlowerSketch = new p5(sketch);
 
 // Receive language message from background
 chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
-    console.log(logMsg[0]);
+    console.log(bloomLogMsg[0]);
     pageLang = msg.data;
     windowFlowerSketch.setFont();
 });
