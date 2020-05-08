@@ -47,7 +47,7 @@ let sketch = (s) => {
     let saoMode = false; /* 扫模式 */
     let lastMouseX = 0;
     let lastMouseY = 0;
-    let mouseDistBuffer = 80;
+    let mouseDistBuffer = 80; // Avoid flowers being next to each other
     let rectList;
     let selectionInfo = {}; // Char index info of rects
 
@@ -73,6 +73,7 @@ let sketch = (s) => {
     let dragged = false;
 
     s.setup = () => {
+        // Add canvas for the whole page
         c = s.createCanvas(
             document.documentElement.scrollWidth,
             document.documentElement.scrollHeight
@@ -107,6 +108,7 @@ let sketch = (s) => {
     s.mouseWheel = () => {
         if (saoMode) {
             // Rebuild rectList
+            // As rects have relative x and y locations compared to the actual scroll position
             rectList = window.getSelection().getRangeAt(0).getClientRects();
         }
     };
@@ -131,10 +133,9 @@ let sketch = (s) => {
             dragged = false;
         }, 300);
         if (dragged && validSelection()) {
-            /* saoMode assumes all chars have equal length */
+            /* saoMode assumes that all chars have equal length */
             saoMode = true;
-            // console.log(window.getSelection());
-            // console.log(window.getSelection().getRangeAt(0).getClientRects());
+
             let selection = window.getSelection(); // Local
             // Get rectList of selection rects
             rectList = window.getSelection().getRangeAt(0).getClientRects();
@@ -156,8 +157,8 @@ let sketch = (s) => {
         }
     };
 
-    let pageX = 0;
-    let pageY = 0;
+    let pageX = 0; // Relative mouseX compared to the current window view
+    let pageY = 0; // Relative mouseY compared to the current window view
 
     s.mouseMoved = () => {
         if (saoMode) {
@@ -173,13 +174,15 @@ let sketch = (s) => {
         if ((pageLang in data) && dataReady && sentimentReady) {
             for (let i = 0; i < rectList.length; i++) {
                 if (
+                    /* If the cursor is in the selection area of a **line** */
                     pageX >= rectList[i].left && pageX <= rectList[i].right &&
                     pageY >= rectList[i].top && pageY <= rectList[i].bottom
                 ) {
+                    // Index of the char hovered on
                     let hoverInd = s.map(
                         pageX - rectList[i].left,
                         0, rectList[i].width,
-                        selectionInfo[i][0], selectionInfo[i][1]
+                        selectionInfo[i][0], selectionInfo[i][1] /* The starting and ending points of THIS block */
                     );
                     let text = window.getSelection().focusNode.wholeText;
                     if (text != undefined && text.charAt((hoverInd >> 1) << 1) in data[pageLang]) {
@@ -197,6 +200,7 @@ let sketch = (s) => {
         }
     };
 
+    // When clicked on text elements...
     $("p, textarea, span, h1, h2, h3, h4, h5, h6, q, cite, blockquote, a, em, i, b, strong").click(() => {
         // clicked = true;
         if (!dragged && !saoMode)
@@ -264,6 +268,7 @@ let sketch = (s) => {
                 s.map(this.sentiment, 0, 1, data.color.negative[thisChoice][2], data.color.positive[thisChoice][2])
             ];
             this.baseColorSet = [];
+            // Each cyber-petal will have a unique color
             for (let i = 0; i < this.angle; i++)
                 this.baseColorSet.push([
                     s.constrain(baseColor[0] + s.random(-17, 17), 0, 255),
@@ -338,6 +343,7 @@ let sketch = (s) => {
 };
 
 let findChoices = (a) => {
+    // Find two colors out of a set of colors
     let returner = [];
     for (let i = 0; i < a.length - 1; i++) {
         let temp = a.slice(i, i + 1);
@@ -350,6 +356,7 @@ let findChoices = (a) => {
 
 let windowFlowerSketch = new p5(sketch);
 
+// Receive language message from background
 chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
     console.log(logMsg[0]);
     pageLang = msg.data;
