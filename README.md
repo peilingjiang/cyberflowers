@@ -25,7 +25,7 @@ Please notice that although the extension requires `tabs` and `activeTab` permis
 
 ## Links
 
-1. [GitHub Repository](https://github.com/peilingjiang/ima-courses/tree/master/s20-pixel/final_cyberflowers) for the example p5.js sketches.
+1. [GitHub Repository](https://github.com/peilingjiang/ima-courses/tree/master/s20-pixel/final_cyberflowers) for the example p5.js sketches
 2. [Embedded p5.js sketch](https://editor.p5js.org/peilingjiang/present/b6SH4VwL1) (Matrix)
 3. [Embedded p5.js sketch](https://editor.p5js.org/peilingjiang/present/ixM4XnkKR) (Formation)
 4. [Embedded p5.js sketch](https://editor.p5js.org/peilingjiang/present/hFP05DMUk) (Composition)
