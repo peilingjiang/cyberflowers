@@ -1,5 +1,7 @@
 # cyberflowers
 
+![Flowers](./media/flowers.png)
+
 Every word is a seed of an idea. And seeds of thoughts with distinct emotion, arousal, attitude, and meaning would grow into different flowers of affects (n. emotion or desire, especially as influencing behavior or action). I built this Chrome extension with my Cyberflowers text-based art to help people find positive or negative sentiments on the web (for fun), with the help of ml5.js sentiment library. Please read my [documentation](https://blog.jpl.design/posts/s20/pixel-by-pixel/cyberflowers/) for more about this project.
 
 The project was developed for **The World: Pixel by Pixel** course (NYU ITP, Spring 2020) under instructions of Daniel Rozin, during the quarantine in COVID-19 pandemic.
